@@ -6,8 +6,12 @@ import torch
 from transformers import ASTFeatureExtractor, ASTModel
 from tqdm import tqdm
 
+# Device für PyTorch (MPS auf Apple Silicon, sonst CPU)
+device = torch.device("mps" if torch.backends.mps.is_available() else "cpu")
+print("Using device:", device)
+
 feature_extractor = ASTFeatureExtractor.from_pretrained("MIT/ast-finetuned-audioset-10-10-0.4593")
-ast_model = ASTModel.from_pretrained("MIT/ast-finetuned-audioset-10-10-0.4593")
+ast_model = ASTModel.from_pretrained("MIT/ast-finetuned-audioset-10-10-0.4593").to(device)
 
 
 # ------------------------------
@@ -113,7 +117,7 @@ def get_ast_embedding(audio_waveform, sr=16000):
     Returns:
         numpy array: AST-Embedding (Shape: (768,))
     """
-    inputs = feature_extractor(audio_waveform, sampling_rate=sr, return_tensors="pt")
+    inputs = feature_extractor(audio_waveform, sampling_rate=sr, return_tensors="pt").to(device)
     with torch.no_grad():
         outputs = ast_model(**inputs)
     cls_embedding = outputs.last_hidden_state[:, 0, :]
