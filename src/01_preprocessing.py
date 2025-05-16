@@ -4,6 +4,16 @@ import numpy as np
 import torch
 import torchaudio
 import soundfile as sf
+
+from concurrent.futures import ProcessPoolExecutor, as_completed
+
+# external noise‑reduction library
+try:
+    import noisereduce as nr
+    HAS_NR = True
+except ImportError:
+    HAS_NR = False
+    print("[WARN] noisereduce package not found – skipping noise reduction.")
 from tqdm import tqdm
 from scipy.signal import butter, lfilter
 
@@ -11,8 +21,8 @@ from scipy.signal import butter, lfilter
 # SETTINGS
 # ------------------------------
 
-LOWCUT = 800      # Bandpass untere Grenze (Hz)
-HIGHCUT = 4500    # Bandpass obere Grenze (Hz)
+LOWCUT = 700      # Bandpass untere Grenze (Hz) – abgesenkt, um Fundamentals ≥ 0.3 kHz zu erhalten.
+HIGHCUT = 4000    # Bandpass obere Grenze (Hz)
 SR_ORIG = 44100   # Original-Samplingrate (Einlesen)
 SR_TARGET = 16000 # Ziel-Samplingrate (Ausgabe)
 
@@ -59,23 +69,27 @@ def bandpass_filter(data, lowcut=LOWCUT, highcut=HIGHCUT, fs=SR_ORIG, order=5):
     return lfilter(b, a, data)
 
 def noise_reduction(data, sr=SR_ORIG):
-    """Einfache spectral gating Noise Reduction."""
-    if len(data) == 0:
-        return data  # Falls das Signal leer ist
+    """Adaptive, konservative Noise‑Reduction mit noisereduce.
 
-    N_FFT = 2048
-    HOP_LENGTH = 512
+    – Ziel: stationäres Rauschen (Wind, Regen, Insekten‑Chorus) dämpfen,
+      ohne kurze Froschrufe (≤ 1 s) zu beschädigen.
+    – prop_decrease < 1 bewirkt eine moderate Absenkung der Rauschanteile.
+    – stationary=False erlaubt eine zeitlich adaptive Rauschschätzung.
+    """
+    if len(data) == 0 or not HAS_NR:
+        return data
 
-    stft = librosa.stft(data, n_fft=N_FFT, hop_length=HOP_LENGTH)
-    magnitude, phase = librosa.magphase(stft)
-
-    noise_floor = np.percentile(magnitude, 25, axis=1, keepdims=True)
-    threshold = noise_floor * 1.5
-    magnitude_cleaned = np.where(magnitude > threshold, magnitude, 0)
-
-    stft_cleaned = magnitude_cleaned * phase
-    cleaned = librosa.istft(stft_cleaned, hop_length=HOP_LENGTH)
-    return cleaned
+    # Sanfte Parameter – lieber etwas Rauschen übrig lassen,
+    # dafür die Calls unverzerrt behalten.
+    reduced = nr.reduce_noise(
+        y=data,
+        sr=sr,
+        stationary=False,          # Noise‑Profil dynamisch nachführen
+        prop_decrease=0.6,         # konservative Absenkung (60 %)
+        freq_mask_smooth_hz=200,   # glättet das Frequenz‑Maskenprofil
+        time_mask_smooth_ms=50     # glättet das Zeit‑Maskenprofil
+    )
+    return reduced
 
 # ------------------------------
 # WINDOWING & RESAMPLING
@@ -130,7 +144,7 @@ def process_wav_file(wav_file, output_folder,
 
         # 2) Fensterung + Resample -> WAV
         times = np.arange(0, duration_sec - window_size + step_sec, step_sec)
-        for start_sec in tqdm(times, desc=f"Processing {base_name}"):
+        for start_sec in times:
             snippet_16k = extract_and_resample_segment(
                 data, sr_orig=sr,
                 start_sec=start_sec,
@@ -174,8 +188,11 @@ def process_directory(input_folder, output_folder, label_folder,
 
     print(f"[INFO] Verarbeite {len(wav_files)} Dateien aus {input_folder} (Labels: {use_labels})")
 
-    for wav_file in wav_files:
-        process_wav_file(wav_file, output_folder, window_size, overlap)
+    # Parallel processing with global progress bar
+    with ProcessPoolExecutor() as executor:
+        futures = {executor.submit(process_wav_file, wav_file, output_folder, window_size, overlap): wav_file for wav_file in wav_files}
+        for _ in tqdm(as_completed(futures), total=len(futures), desc="Processing all files"):
+            pass
 
     print("[INFO] Alle Audiodateien wurden verarbeitet.")
 
@@ -184,9 +201,9 @@ def process_directory(input_folder, output_folder, label_folder,
 # ------------------------------
 
 if __name__ == "__main__":
-    input_folder = "../Data/raw"
-    output_folder = "../Data/Processed_16k_inf_all"
-    label_folder = "../Data/Labels"
+    input_folder = "/Volumes/QuebSSD/bioacoustic_data/Data/Raw"
+    output_folder = "/Volumes/QuebSSD/bioacoustic_data/Data/new_pre/Processed_16k_inf_all"
+    label_folder = "/Volumes/QuebSSD/bioacoustic_data/Data/Labels"
 
     # Hier kannst du Labels aktivieren oder deaktivieren
     process_directory(input_folder, output_folder, label_folder, use_labels=USE_LABELS)

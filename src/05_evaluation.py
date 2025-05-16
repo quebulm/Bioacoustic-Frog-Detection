@@ -198,7 +198,7 @@ def evaluate_model(y_true, y_pred):
 
 if __name__ == "__main__":
     label_folder = "../data/Labels/Test"
-    test_folder = "../data/Test_inf"
+    test_folder = "../data/Test_16k"
 
     print(f"[INFO] Lade Testlabels aus {label_folder} ...")
     test_labels = load_test_labels(label_folder)

@@ -19,8 +19,8 @@ if gpus:
 #  Daten laden (YAMNet-Embeddings)
 # ------------------------------
 def load_data(data_folder="../data/"):
-    X = np.load(os.path.join(data_folder, "X_embeddings_v0.npy"))  # YAMNet-Features (N, 1024)
-    y = np.load(os.path.join(data_folder, "y_labels_v0.npy"))      # Labels (N,)
+    X = np.load(os.path.join(data_folder, "X_embeddings_v3.npy"))  # YAMNet-Features (N, 1024)
+    y = np.load(os.path.join(data_folder, "y_labels_v3.npy"))      # Labels (N,)
 
     print(f"[INFO] Geladene Daten: X: {X.shape}, y: {y.shape}")
 
@@ -57,7 +57,7 @@ def focal_loss(alpha, gamma):
 # ------------------------------
 #  Dynamische Modell-Architektur
 # ------------------------------
-def build_classifier(trial, input_dim=1024):
+def build_classifier(trial, input_dim=768):
     """
     Baut ein Modell basierend auf den von Optuna vorgeschlagenen Parametern:
     - n_layers: Anzahl Dense-Schichten (1-3)
@@ -195,7 +195,7 @@ def objective(trial):
 # ------------------------------
 if __name__ == "__main__":
     study = optuna.create_study(direction="maximize")
-    study.optimize(objective, n_trials=150, n_jobs=1)
+    study.optimize(objective, n_trials=50, n_jobs=1)
 
     print("\n[INFO] Beste Hyperparameter:")
     for key, value in study.best_trial.params.items():

@@ -76,7 +76,7 @@ def load_labels(label_folders):
 
 if __name__ == "__main__":
     # Pfade zu den Label-Dateien
-    label_folders = ["../data/Inference_Results/vall"]
+    label_folders = ["../data/Inference_Results/vall_old"]
 
     # Lade Label-Informationen
     labels_dict, call_counts_by_date, call_counts_by_date_hour = load_labels(label_folders)

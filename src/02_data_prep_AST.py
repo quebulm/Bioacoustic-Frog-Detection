@@ -1,18 +1,27 @@
 import os
 import re
 import librosa
-import numpy as np
+import torchaudio
+from torchaudio import functional as F
 import torch
 from transformers import ASTFeatureExtractor, ASTModel
 from tqdm import tqdm
+import numpy as np
 
 # Device für PyTorch (MPS auf Apple Silicon, sonst CPU)
 device = torch.device("mps" if torch.backends.mps.is_available() else "cpu")
 print("Using device:", device)
 
+# ------------------------------
+#  Performance‑related settings
+# ------------------------------
+BATCH_SIZE = 32      # number of snippets processed together
+USE_FP16   = False   # set True for faster inference (may slightly affect accuracy)
+
 feature_extractor = ASTFeatureExtractor.from_pretrained("MIT/ast-finetuned-audioset-10-10-0.4593")
 ast_model = ASTModel.from_pretrained("MIT/ast-finetuned-audioset-10-10-0.4593").to(device)
-
+if USE_FP16:
+    ast_model = ast_model.to(dtype=torch.float16)
 
 # ------------------------------
 #  Labels aus TXT-Dateien laden (mehrere Ordner möglich)
@@ -123,6 +132,23 @@ def get_ast_embedding(audio_waveform, sr=16000):
     cls_embedding = outputs.last_hidden_state[:, 0, :]
     return cls_embedding.squeeze().cpu().numpy()
 
+def get_ast_embeddings_batch(waveforms, sr=16000):
+    """
+    Batch‑variant of AST embedding.
+    Accepts a list of 1‑D numpy arrays (mono, 16 kHz) and returns
+    a numpy array of shape (B, 768) with the CLS embeddings.
+    """
+    inputs = feature_extractor(
+        waveforms,
+        sampling_rate=sr,
+        padding=True,
+        return_tensors="pt"
+    )
+    dtype = torch.float16 if USE_FP16 else torch.float32
+    inputs = {k: v.to(device, dtype=dtype) for k, v in inputs.items()}
+    with torch.no_grad():
+        outputs = ast_model(**inputs)
+    return outputs.last_hidden_state[:, 0, :].cpu().numpy()
 
 # ------------------------------
 #  Snippets + Labels extrahieren und Embeddings berechnen (mehrere Processed-Ordner möglich)
@@ -169,7 +195,9 @@ def collect_snippet_embeddings(processed_folders, labels_dict=None, return_label
                 print(f"[WARN] Keine Snippet-Dateien gefunden für {basename}, Pfad: {subdir}, skip...")
                 continue
 
-            for sfile in snippet_files:
+            batch_wavs, batch_labels = [], []
+
+            for idx, sfile in enumerate(snippet_files):
                 match = re.search(rf"{basename}_(\d+)\.wav", sfile)
                 if not match:
                     print(f"[WARN] Konnte Startzeit nicht extrahieren: {sfile}, in {subdir}")
@@ -177,27 +205,33 @@ def collect_snippet_embeddings(processed_folders, labels_dict=None, return_label
 
                 start_ms = float(match.group(1))
                 start_sec = start_ms / 1000.0
-                end_sec = start_sec + 2.0
+                end_sec   = start_sec + 2.0
 
                 if return_labels:
                     snippet_label = get_window_label(intervals, start_sec, end_sec)
-                    y.append(snippet_label)
 
                 snippet_path = os.path.join(subdir, sfile)
                 try:
-                    wav_data, sr_ = librosa.load(snippet_path, sr=None)
+                    wav_tensor, sr_ = torchaudio.load(snippet_path)
+                    wav_tensor = wav_tensor.mean(dim=0)            # mono
                     if sr_ != 16000:
-                        print(f"[WARN] {snippet_path} hat sr={sr_}, erwartet 16000.")
-                    if len(wav_data) == 0:
-                        print(f"[WARN] Leeres WAV-File: {snippet_path}, skip...")
-                        continue
+                        wav_tensor = F.resample(wav_tensor, sr_, 16000)
+                    wav_data = wav_tensor.numpy()
                 except Exception as e:
                     print(f"[ERROR] Fehler beim Laden {snippet_path}: {e}")
                     continue
 
-                emb = get_ast_embedding(wav_data, sr=16000)
+                batch_wavs.append(wav_data)
+                if return_labels:
+                    batch_labels.append(snippet_label)
 
-                X.append(emb)
+                # If batch is full or last snippet, run inference
+                if len(batch_wavs) == BATCH_SIZE or idx == len(snippet_files) - 1:
+                    embs = get_ast_embeddings_batch(batch_wavs, sr=16000)
+                    X.extend(embs)
+                    if return_labels:
+                        y.extend(batch_labels)
+                    batch_wavs, batch_labels = [], []
 
     X = np.array(X)
     if return_labels:
@@ -213,14 +247,14 @@ def collect_snippet_embeddings(processed_folders, labels_dict=None, return_label
 
 if __name__ == "__main__":
     label_folders = ["../data/Labels/Test"]
-    processed_folders = ["../data/Test_16k"]
+    processed_folders = ["../data/Processed_16k_inf_all"]
 
-    ONLY_X = False  # True = nur Embeddings ohne Labels erzeugen
+    ONLY_X = True  # True = nur Embeddings ohne Labels erzeugen
 
     if ONLY_X:
         X = collect_snippet_embeddings(processed_folders, return_labels=False)
         print(f"Embeddings gesammelt (nur X): {X.shape}")
-        np.save("../data/X_embeddings_infer.npy", X)
+        np.save("../data/X_embeddings_infer_all.npy", X)
     else:
         labels_dict = load_labels(label_folders, processed_folders)
         X, y = collect_snippet_embeddings(processed_folders, labels_dict, return_labels=True)

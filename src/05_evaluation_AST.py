@@ -55,7 +55,7 @@ def evaluate_model(y_true, y_pred):
 
 if __name__ == "__main__":
     print("[INFO] Lade Modell ...")
-    MODEL_PATH = "../models/best_model.h5"
+    MODEL_PATH = "../models/best_model_aug"
     try:
         classifier = keras.models.load_model(f"{MODEL_PATH}.keras")
         print(f"[INFO] Keras-Modell geladen: {MODEL_PATH}.keras")
@@ -68,12 +68,12 @@ if __name__ == "__main__":
         print(f"[INFO] H5-Modell geladen und neu kompiliert: {MODEL_PATH}.h5")
 
     print("[INFO] Lade vorberechnete Embeddings und Labels ...")
-    X_embeddings = np.load("../data/X_embeddings_Test_16k.npy")
-    y_true = np.load("../data/y_labels_Test.npy")
+    X_embeddings = np.load("../data/embeddings/X_embeddings_Test_16k.npy")
+    y_true = np.load("../data/embeddings/y_labels_Test.npy")
 
     print("[INFO] Starte Inferenz ...")
     probs = classifier.predict(X_embeddings, batch_size=32)
-    y_pred = [1 if p[0] > 0.637 else 0 for p in probs]
+    y_pred = [1 if p[0] > 0.5 else 0 for p in probs]
 
     print("[INFO] Berechne Evaluationsmetriken ...")
     evaluate_model(y_true, y_pred)

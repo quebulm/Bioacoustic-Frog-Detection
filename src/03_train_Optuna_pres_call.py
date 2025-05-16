@@ -1,3 +1,4 @@
+import gc
 import os
 import numpy as np
 import tensorflow as tf
@@ -100,8 +101,8 @@ def objective(trial):
     alpha = trial.suggest_float("alpha", 0.5, 1.0)
     gamma = trial.suggest_float("gamma", 1.0, 4.0)
     learning_rate = trial.suggest_loguniform("learning_rate", 1e-5, 1e-3)
-    threshold = trial.suggest_float("threshold", 0.5, 0.9)
     pos_weight = trial.suggest_float("pos_weight", 1.0, 5.0)
+    threshold = 0.5  # fixed threshold for predicting positives
 
     # Daten laden (fester Split)
     X_train, X_val, y_train, y_val = load_data()
@@ -135,11 +136,28 @@ def objective(trial):
     y_pred_proba = model.predict(X_val)
     y_pred = (y_pred_proba > threshold).astype("int32")
 
-    # f0.5-Score (stärkeres Gewicht auf Präzision, um False Positives zu minimieren)
+    # f0.4-Score (stärkeres Gewicht auf Präzision)
     f05 = fbeta_score(y_val, y_pred, beta=0.4)
 
-    # Optuna-Feedback
+    # Confusion Matrix berechnen und loggen
+    from sklearn.metrics import confusion_matrix
+    cm = confusion_matrix(y_val, y_pred)
+    cm_str = (
+        f"\n[Trial {trial.number}] Confusion Matrix (Threshold = {threshold:.2f}):\n"
+        f"               Predicted 0    Predicted 1\n"
+        f"Actual 0       {cm[0, 0]:<14}{cm[0, 1]}\n"
+        f"Actual 1       {cm[1, 0]:<14}{cm[1, 1]}\n"
+    )
+    print(cm_str)
+    with open("confusion_log.txt", "a") as f:
+        f.write(cm_str)
+
+    # Optuna Feedback
     trial.report(f05, step=1)
+
+    # Speicher bereinigen
+    tf.keras.backend.clear_session()
+    gc.collect()
 
     return f05
 
@@ -149,9 +167,8 @@ def objective(trial):
 # ------------------------------
 
 if __name__ == "__main__":
-    # Studie erstellen – wir erhöhen die Anzahl der Versuche (n_trials)
     study = optuna.create_study(direction="maximize")
-    study.optimize(objective, n_trials=40)  # etwa doppelt so hoch wie zuvor
+    study.optimize(objective, n_trials=40)
 
     print("\n[INFO] Beste Hyperparameter:")
     for key, value in study.best_trial.params.items():
