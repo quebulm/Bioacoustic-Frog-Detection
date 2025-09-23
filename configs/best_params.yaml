@@ -1,0 +1,12 @@
+model:
+  units: 472
+  n_layers: 2
+  dropout: 0.07358066526178342
+  focal_alpha: 0.7406363417057666
+  focal_gamma: 2.1660378681292776
+train:
+  learning_rate: 0.0006149585220828666
+  batch_size: 32
+  pos_weight: 1.2178810127057842
+  epochs: 56
+  patience: 14
