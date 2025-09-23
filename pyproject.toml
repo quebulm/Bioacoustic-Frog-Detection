@@ -21,19 +21,8 @@ dependencies = [
   "tensorflow>=2.13",
   "tensorflow-hub",
   "optuna>=3",
-  "noisereduce; platform_system != 'Windows'",  # optional, falls verfügbar
-  "torch; platform_system != 'Darwin' or platform_machine != 'arm64'",
-  "torchaudio; platform_system != 'Darwin' or platform_machine != 'arm64'",
+  "noisereduce",  # optional, falls verfügbar
 ]
-
-[tool.ruff]
-line-length = 100
-select = ["E","F","I","B","UP"]
-ignore = ["E203"]  # kompatibel mit black
-
-[tool.black]
-line-length = 100
-target-version = ["py310"]
 
 [build-system]
 requires = ["setuptools>=68", "wheel"]

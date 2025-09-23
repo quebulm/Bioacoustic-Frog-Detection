@@ -12,7 +12,7 @@ TUNE_CFG       := $(CONFIG_DIR)/tune.yaml
 BEST_PARAMS   := $(CONFIG_DIR)/best_params.yaml
 
 # -------- Top-level targets --------
-.PHONY: all preprocess embed train train_tuned tune evaluate infer install precommit help
+.PHONY: all preprocess embed train train_tuned tune evaluate infer install help
 
 all: preprocess embed train evaluate infer
 
@@ -47,13 +47,8 @@ infer:
 # -------- Dev convenience --------
 install:
 	@echo "==> Installing project (pyproject.toml)"
-	$(PYTHON) -m pip install -U pip
+	$(PYTHON) -m pip install -U pip setuptools wheel
 	$(PYTHON) -m pip install -e .
-
-precommit:
-	@echo "==> Installing pre-commit hooks"
-	$(PYTHON) -m pip install pre-commit
-	pre-commit install
 
 help:
 	@echo "Targets:"
@@ -66,4 +61,3 @@ help:
 	@echo "  make infer        # Inferenz auf neuen Audios"
 	@echo "  make all          # preprocess → embed → train → evaluate"
 	@echo "  make install      # Dependencies aus pyproject.toml installieren"
-	@echo "  make precommit    # Git-Hooks (Black/Ruff/Isort) installieren"
