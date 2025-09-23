@@ -1,1 +1,27 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.env
+.venv
+venv/
+.ipynb_checkpoints/
+
+# Data & Models (werden extern/artefakt)
 data/
+models/
+outputs/
+
+# Logs
+*.log
+
+# OS / IDE
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+
+# TF/Optuna artefacts
+mlruns/
+.wandb/
+optuna_studies/
