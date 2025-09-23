@@ -1,0 +1,15 @@
+include: "configs/base.yaml"
+
+artifacts:
+  model_path: "${paths.models_dir}/best_model.keras"
+
+evaluation:
+  threshold: 0.5
+  reports_dir: "${paths.outputs_dir}/reports"
+  metrics_file: "metrics.json"
+
+test_data:
+  processed_dir: "${paths.processed_dir}"
+  labels_dir: "${paths.labels_dir}"
+  segment_sec: 2.0
+  batch_size: 32
