@@ -14,7 +14,7 @@ BEST_PARAMS   := $(CONFIG_DIR)/best_params.yaml
 # -------- Top-level targets --------
 .PHONY: all preprocess embed train train_tuned tune evaluate infer install precommit help
 
-all: preprocess embed train evaluate
+all: preprocess embed train evaluate infer
 
 preprocess:
 	@echo "==> Preprocessing"

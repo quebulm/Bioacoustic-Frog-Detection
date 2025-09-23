@@ -76,7 +76,6 @@ def build_cfg(config_path: Path, best_params_path: Path | None = None) -> TrainC
     else:
         cfg = raw
 
-    # ${root_dir} ersetzen
     root = cfg.get("root_dir", "")
     def subst(v):
         return v.replace("${root_dir}", root) if isinstance(v, str) and "${root_dir}" in v else v

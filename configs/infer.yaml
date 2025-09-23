@@ -28,9 +28,9 @@ yamnet:
   batch_size: 64
 
 infer:
-  threshold: 0.5
-  merge_gap: 0.4       # max. Lücke zwischen Treffern, die zusammengeschoben werden
-  min_event_len: 0.5   # zu kurze Events verwerfen
+  threshold: 0.35
+  merge_gap: 0      # max. Lücke zwischen Treffern, die zusammengeschoben werden
+  min_event_len: 2   # zu kurze Events verwerfen
   low_freq_hz: 700     # in Raven-Datei
   high_freq_hz: 4000   # in Raven-Datei
   species_label: "Frog"

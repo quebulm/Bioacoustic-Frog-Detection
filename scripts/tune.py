@@ -21,7 +21,7 @@ from typing import Dict
 import numpy as np
 import optuna
 import tensorflow as tf
-from sklearn.metrics import f1_score, average_precision_score
+from sklearn.metrics import f1_score, average_precision_score, fbeta_score
 from sklearn.model_selection import train_test_split
 from tensorflow import keras
 
@@ -138,9 +138,12 @@ def make_objective(X: np.ndarray, y: np.ndarray, cfg_train: Dict, metric: str):
         y_prob = model.predict(X_val, batch_size=batch_size).reshape(-1)
         if metric == "pr_auc":
             score = float(average_precision_score(y_val, y_prob))  # AP = PR-AUC
-        else:  # f1
+        else:  # f1 or f2
             y_pred = (y_prob > 0.5).astype(np.int32)
-            score = float(f1_score(y_val, y_pred))
+            if metric == "f2":
+                score = float(fbeta_score(y_val, y_pred, beta=2))
+            else:  # f1
+                score = float(f1_score(y_val, y_pred))
 
         # Ressourcen säubern (wichtig bei vielen Trials)
         tf.keras.backend.clear_session()
@@ -156,7 +159,7 @@ def main():
     parser = argparse.ArgumentParser(description="Optuna-Hyperparametertuning für Frog-Call-Classifier.")
     parser.add_argument("--config", type=str, required=True, help="Pfad zu configs/tune.yaml")
     parser.add_argument("--trials", type=int, default=5, help="Anzahl Optuna-Trials")
-    parser.add_argument("--metric", type=str, choices=["f1", "pr_auc"], default="f1",
+    parser.add_argument("--metric", type=str, choices=["f1", "pr_auc", "f2"], default="f1",
                         help="Zielmetrik für das Tuning")
     parser.add_argument("--study-name", type=str, default="frog_call_tuning")
     parser.add_argument("--export-params", type=str, default=None,
@@ -204,7 +207,7 @@ def main():
     }
     save_metrics(out, paths.outputs_dir, filename="tuning.json")
 
-    # Optional: Beste Parameter als YAML exportieren (für direkten Include in train.yaml)
+    # Beste Parameter als YAML exportieren (für direkten Include in train.yaml)
     if args.export_params:
         try:
             import yaml

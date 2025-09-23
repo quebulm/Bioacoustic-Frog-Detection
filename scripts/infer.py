@@ -72,7 +72,7 @@ def build_cfg(config_path: Path) -> dict:
 
 
 # ------------------------------
-# Preprocessing (gleich wie scripts/preprocess.py, kurz integriert)
+# Preprocessing pro File
 # ------------------------------
 def _preprocess_one_file(
     wav_path: Path,
@@ -86,7 +86,7 @@ def _preprocess_one_file(
     highcut: float,
     bp_order: int,
 ) -> None:
-    import librosa  # lokal, damit Importfehler früh sichtbar sind
+    import librosa
 
     basename = wav_path.stem
     out_subdir = out_dir / basename

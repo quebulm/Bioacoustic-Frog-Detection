@@ -9,7 +9,7 @@ train:
 
 
 optuna:
-  trials: 5           # Anzahl Trials
-  metric: "f1"         # "f1" oder "pr_auc"
+  trials: 25           # Anzahl Trials
+  metric: "f2"         # "f1", "f2" oder "pr_auc"
   direction: "maximize"  # i.d.R. "maximize"
   study_name: "frog_call_tuning"
