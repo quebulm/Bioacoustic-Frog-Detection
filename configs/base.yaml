@@ -1,0 +1,10 @@
+root_dir: "/Volumes/QuebSSD/Data"     # externer Datenträger
+
+paths:
+  raw_dir:        "${root_dir}/raw"
+  labels_dir:     "${root_dir}/labels"
+  processed_dir:  "${root_dir}/processed_16k"
+  embeddings:     "${root_dir}/X_embeddings_v0.npy"
+  y_labels:       "${root_dir}/y_labels_v0.npy"
+  models_dir:     "${root_dir}/models"
+  outputs_dir:    "${root_dir}/outputs"

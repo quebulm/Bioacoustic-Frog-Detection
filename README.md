@@ -12,26 +12,54 @@ Die Forschung erfolgt in Zusammenarbeit mit der University of KwaZulu-Natal.
 
 ```
 Bioacoustic-Frog-Detection/
-├── Data/
-│   ├── Raw/
-│   ├── Labels/
-│   ├── Processed_16k/
-│   ├── Inference_Results/
-│   ├── X_embeddings_v0.npy
-│   └── y_labels_v0.npy
-├── models/
+├── configs/
+│   ├── base.yaml
+│   ├── best_params.yaml
+│   ├── eval.yaml
+│   ├── features.yaml
+│   ├── infer.yaml
+│   ├── preprocess.yaml
+│   ├── train.yaml
+│   └── tune.yaml
+├── scripts/
+│   ├── evaluate.py
+│   ├── infer.py
+│   ├── make_embeddings.py
+│   ├── preprocess.py
+│   ├── train.py
+│   └── tune.py
 ├── src/
-│   ├── 00_data_checker.py
-│   ├── 01_preprocessing.py
-│   ├── 02_data_prep.py
-│   ├── 03_train.py
-│   ├── 03_train_Optuna_allgm.py
-│   ├── 04_Pseudo_Labeling.py
-│   ├── 05_evaluation.py
-│   └── inference.py
-├── LICENSE
-└── README.md
+│   └── bioacoustic_frog_detection/
+│       ├── data/
+│       │   ├── __init__.py
+│       │   ├── features.py
+│       │   ├── filters.py
+│       │   └── io.py
+│       ├── eval/
+│       │   └── on_embeddings.py
+│       └── models/
+│           ├── __init__.py
+│           ├── classifier.py
+│           └── config.py
+├── Makefile
 ```
+
+```
+<root_dir>/                    # über base.yaml setzen
+├── Data/
+│   ├── Raw/                   # Input-WAVs
+│   ├── Raw_Infer/             # WAVs nur für Inferenz
+│   ├── Processed_16k/         # Preprocessed Snippets (Training) - Wird erstellt 
+│   ├── Processed_16k_infer/   # Preprocessed Snippets (Inference) - Wird erstellt 
+│   ├── Labels/                # Annotationen / Ground Truth 
+│   ├── Test_Labels/           # Test-Labels (separat)
+│   ├── X_embeddings_v0.npy    # Training Embeddings - Wird erstellt 
+│   ├── y_labels_v0.npy        # Training Labels - Wird erstellt 
+│   └── Inference_Results/     # Ausgaben von infer.py (CSV für Raven Pro) - Wird erstellt 
+├── models/                    # gespeicherte Modelle
+└── outputs/                   # Logs, tuning.json, Metrics
+```
+
 
 ---
 

@@ -1,0 +1,12 @@
+include: "configs/base.yaml"
+
+preprocess:
+  sr_orig: 44100
+  sr_target: 16000
+  window_size: 2.0
+  overlap: 0.5
+  lowcut: 700.0
+  highcut: 4000.0
+  bp_order: 5
+  n_jobs: 4
+  use_labels: true   # <- auf true setzen, wenn nur gelabelte WAVs vorverarbeitet werden sollen

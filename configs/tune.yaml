@@ -1,0 +1,15 @@
+include: "configs/base.yaml"
+
+# Pfade zu den bereits erzeugten Embeddings (Train/Val-Daten!)
+paths:
+  outputs_dir: "${root_dir}/Bioacoustic-Frog-Detection/outputs"
+
+train:
+  val_split: 0.2   # gleicher Split wie beim Training (nur für die Bewertung in jedem Trial)
+
+
+optuna:
+  trials: 25           # Anzahl Trials
+  metric: "f2"         # "f1", "f2" oder "pr_auc"
+  direction: "maximize"  # i.d.R. "maximize"
+  study_name: "frog_call_tuning"

@@ -1,0 +1,29 @@
+[project]
+name = "bioacoustic-frog-detection"
+version = "0.1.0"
+description = "Detection and classification of frog calls (Leptopelis) with ML."
+authors = [{name = "Quentin Ulmer"}]
+readme = "README.md"
+requires-python = ">=3.10"
+
+dependencies = [
+  "numpy",
+  "scipy",
+  "pandas",
+  "librosa",
+  "soundfile",
+  "matplotlib",
+  "tqdm",
+  "scikit-learn",
+  "pyyaml",
+  "tensorflow-hub",
+  "tensorflow-macos>=2.13; platform_system == 'Darwin' and platform_machine == 'arm64'",  # Apple Silicon
+  "tensorflow-metal>=1.0; platform_system == 'Darwin' and platform_machine == 'arm64'",  # GPU on M1/M2
+  "tensorflow>=2.13; platform_system != 'Darwin' or platform_machine != 'arm64'",         # andere Plattformen
+  "optuna>=3",
+  "noisereduce",
+]
+
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"

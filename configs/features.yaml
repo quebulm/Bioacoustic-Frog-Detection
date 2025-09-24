@@ -1,0 +1,4 @@
+include: "configs/base.yaml"
+yamnet:
+  hub_url: "https://tfhub.dev/google/yamnet/1"
+  batch_size: 64
