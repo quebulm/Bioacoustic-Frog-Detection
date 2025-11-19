@@ -43,7 +43,8 @@ def _plot_confusion(y_true: np.ndarray, y_pred: np.ndarray, out_path: Path) -> N
     fig, ax = plt.subplots(figsize=(6, 5))
     im = ax.imshow(cm, interpolation="nearest")
     ax.figure.colorbar(im, ax=ax)
-    ax.set(xticks=[0, 1], yticks=[0, 1], xticklabels=["No Call (0)", "Call (1)"], yticklabels=["No Call (0)", "Call (1)"], ylabel="True", xlabel="Predicted", title="Confusion Matrix")
+    ax.set(xticks=[0, 1], yticks=[0, 1], xticklabels=["No Call (0)", "Call (1)"],
+           yticklabels=["No Call (0)", "Call (1)"], ylabel="True", xlabel="Predicted", title="Confusion Matrix")
     for (i, j), v in np.ndenumerate(cm):
         ax.text(j, i, str(v), ha="center", va="center")
     _ensure_parent(out_path)

@@ -42,6 +42,7 @@ def _load_yaml(path: Path) -> dict:
     with path.open("r") as f:
         return yaml.safe_load(f)
 
+
 def _deep_update(a: dict, b: dict) -> dict:
     for k, v in b.items():
         if isinstance(v, dict) and isinstance(a.get(k), dict):
@@ -50,9 +51,11 @@ def _deep_update(a: dict, b: dict) -> dict:
             a[k] = v
     return a
 
+
 class _CfgObj:
     def __init__(self, d: dict):
         self.paths = d["paths"]
+
 
 def build_cfg(config_path: Path) -> dict:
     raw = _load_yaml(config_path)
@@ -64,8 +67,10 @@ def build_cfg(config_path: Path) -> dict:
 
     # ${root_dir} ersetzen
     root = cfg.get("root_dir", "")
+
     def subst(v):
         return v.replace("${root_dir}", root) if isinstance(v, str) and "${root_dir}" in v else v
+
     if "paths" in cfg:
         cfg["paths"] = {k: subst(v) for k, v in cfg["paths"].items()}
     return cfg
@@ -75,16 +80,16 @@ def build_cfg(config_path: Path) -> dict:
 # Preprocessing pro File
 # ------------------------------
 def _preprocess_one_file(
-    wav_path: Path,
-    out_dir: Path,
-    *,
-    sr_orig: int,
-    sr_target: int,
-    window_size: float,
-    overlap: float,
-    lowcut: float,
-    highcut: float,
-    bp_order: int,
+        wav_path: Path,
+        out_dir: Path,
+        *,
+        sr_orig: int,
+        sr_target: int,
+        window_size: float,
+        overlap: float,
+        lowcut: float,
+        highcut: float,
+        bp_order: int,
 ) -> None:
     import librosa
 
@@ -161,6 +166,7 @@ def maybe_preprocess_for_infer(raw_dir: Path, processed_dir: Path, pre_cfg: dict
 def load_yamnet(hub_url: str):
     return hub.load(hub_url)
 
+
 def yamnet_embed(yamnet, waveform_16k: np.ndarray) -> np.ndarray:
     # yamnet(audio) -> (scores, embeddings, spectrogram)
     _, embeddings, _ = yamnet(waveform_16k)
@@ -179,6 +185,7 @@ def load_classifier(model_path: Path) -> tf.keras.Model:
     except Exception as e:
         raise RuntimeError(f"Konnte Modell nicht laden ({model_path}): {e}")
 
+
 def collect_snippet_paths(processed_dir: Path) -> Dict[str, List[Path]]:
     """{basename: [snippet_path, ...]}"""
     out: Dict[str, List[Path]] = {}
@@ -191,13 +198,14 @@ def collect_snippet_paths(processed_dir: Path) -> Dict[str, List[Path]]:
             out[basename] = files
     return out
 
+
 def batch_predict_for_recording(
-    basename: str,
-    snippet_files: List[Path],
-    yamnet,
-    classifier: tf.keras.Model,
-    batch_size: int,
-    window_size: float,
+        basename: str,
+        snippet_files: List[Path],
+        yamnet,
+        classifier: tf.keras.Model,
+        batch_size: int,
+        window_size: float,
 ) -> List[Tuple[float, float]]:
     """
     Returns list of (start_sec, prob) per snippet file of a single recording.
@@ -238,13 +246,14 @@ def batch_predict_for_recording(
     pairs.sort(key=lambda t: t[0])
     return pairs
 
+
 def merge_positives(
-    start_prob_pairs: List[Tuple[float, float]],
-    *,
-    threshold: float,
-    window_size: float,
-    merge_gap: float,
-    min_event_len: float,
+        start_prob_pairs: List[Tuple[float, float]],
+        *,
+        threshold: float,
+        window_size: float,
+        merge_gap: float,
+        min_event_len: float,
 ) -> List[Tuple[float, float, float]]:
     """
     Aus binären Snippet-Treffern (start, prob) → gemergte Events (begin, end, max_prob).
@@ -286,14 +295,15 @@ def write_csv(out_dir: Path, basename: str, events: List[Tuple[float, float, flo
     df.to_csv(out_path, index=False)
     return out_path
 
+
 def write_raven_selection(
-    out_dir: Path,
-    basename: str,
-    events: List[Tuple[float, float, float]],
-    *,
-    low_hz: float,
-    high_hz: float,
-    species_label: str,
+        out_dir: Path,
+        basename: str,
+        events: List[Tuple[float, float, float]],
+        *,
+        low_hz: float,
+        high_hz: float,
+        species_label: str,
 ) -> Path:
     """
     Schreibt Raven-kompatibles .Table.1.selections.txt
@@ -318,7 +328,8 @@ def write_raven_selection(
 # CLI main
 # ------------------------------
 def main():
-    parser = argparse.ArgumentParser(description="Inference on raw WAVs → snippets → embeddings → predictions → Raven labels")
+    parser = argparse.ArgumentParser(
+        description="Inference on raw WAVs → snippets → embeddings → predictions → Raven labels")
     parser.add_argument("--config", type=str, required=True, help="Pfad zu configs/infer.yaml")
     args = parser.parse_args()
 

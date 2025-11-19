@@ -38,6 +38,7 @@ def _load_yaml(path: Path) -> dict:
     with path.open("r") as f:
         return yaml.safe_load(f)
 
+
 def _deep_update(a: dict, b: dict) -> dict:
     for k, v in b.items():
         if isinstance(v, dict) and isinstance(a.get(k), dict):
@@ -46,8 +47,10 @@ def _deep_update(a: dict, b: dict) -> dict:
             a[k] = v
     return a
 
+
 class _CfgObj:
     def __init__(self, d): self.paths = d["paths"]
+
 
 @dataclass(frozen=True)
 class TrainCfg:
@@ -67,6 +70,7 @@ class TrainCfg:
     pos_weight: float
     threshold: float
 
+
 def build_cfg(config_path: Path, best_params_path: Path | None = None) -> TrainCfg:
     raw = _load_yaml(config_path)
     # include
@@ -77,8 +81,10 @@ def build_cfg(config_path: Path, best_params_path: Path | None = None) -> TrainC
         cfg = raw
 
     root = cfg.get("root_dir", "")
+
     def subst(v):
         return v.replace("${root_dir}", root) if isinstance(v, str) and "${root_dir}" in v else v
+
     if "paths" in cfg:
         cfg["paths"] = {k: subst(v) for k, v in cfg["paths"].items()}
 

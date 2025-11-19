@@ -1,5 +1,3 @@
-
-
 # scripts/evaluate.py
 from __future__ import annotations
 
@@ -46,8 +44,10 @@ def build_cfg(config_path: Path) -> dict:
 
     # ${root_dir} ersetzen
     root = cfg.get("root_dir", "")
+
     def subst(v):
         return v.replace("${root_dir}", root) if isinstance(v, str) and "${root_dir}" in v else v
+
     if "paths" in cfg:
         cfg["paths"] = {k: subst(v) for k, v in cfg["paths"].items()}
     return cfg

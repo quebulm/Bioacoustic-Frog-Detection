@@ -55,6 +55,7 @@ def build_cfg(config_path: Path) -> dict:
 
     # ${root_dir} ersetzen
     root = cfg.get("root_dir", "")
+
     def subst(v):
         return v.replace("${root_dir}", root) if isinstance(v, str) and "${root_dir}" in v else v
 
@@ -79,16 +80,16 @@ def build_cfg(config_path: Path) -> dict:
 # Snippet-Erzeugung für eine Datei
 # ------------------------------
 def process_file(
-    wav_path: Path,
-    out_dir: Path,
-    *,
-    sr_orig: int,
-    sr_target: int,
-    window_size: float,
-    overlap: float,
-    lowcut: float,
-    highcut: float,
-    bp_order: int,
+        wav_path: Path,
+        out_dir: Path,
+        *,
+        sr_orig: int,
+        sr_target: int,
+        window_size: float,
+        overlap: float,
+        lowcut: float,
+        highcut: float,
+        bp_order: int,
 ) -> dict:
     """
     Verarbeitet eine WAV-Datei deterministisch:
