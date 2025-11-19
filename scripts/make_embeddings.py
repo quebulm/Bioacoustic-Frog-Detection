@@ -34,10 +34,12 @@ class FeaturesCfg:
     yamnet_hub_url: str
     segment_sec: float
 
+
 def _load_yaml(path: Path) -> dict:
     import yaml
     with path.open("r") as f:
         return yaml.safe_load(f)
+
 
 def _deep_update(a: dict, b: dict) -> dict:
     for k, v in b.items():
@@ -46,6 +48,7 @@ def _deep_update(a: dict, b: dict) -> dict:
         else:
             a[k] = v
     return a
+
 
 def build_cfg(config_path: Path) -> FeaturesCfg:
     raw = _load_yaml(config_path)
@@ -56,14 +59,17 @@ def build_cfg(config_path: Path) -> FeaturesCfg:
         cfg = raw
 
     root = cfg.get("root_dir", "")
+
     def subst(v):
         return v.replace("${root_dir}", root) if isinstance(v, str) and "${root_dir}" in v else v
+
     if "paths" in cfg:
         cfg["paths"] = {k: subst(v) for k, v in cfg["paths"].items()}
 
     # Minimalobjekt, um Paths.from_cfg wiederzuverwenden
     class _Obj:
         def __init__(self, d): self.paths = d["paths"]
+
     paths = Paths.from_cfg(_Obj(cfg))
 
     seg = cfg.get("segment_sec")
@@ -83,10 +89,13 @@ def build_cfg(config_path: Path) -> FeaturesCfg:
 # CLI
 # ------------------------------------------------------------
 def main():
-    parser = argparse.ArgumentParser(description="Erzeuge YAMNet-Embeddings (X) und Labels (y) aus Snippets + Raven-Labels.")
+    parser = argparse.ArgumentParser(
+        description="Erzeuge YAMNet-Embeddings (X) und Labels (y) aus Snippets + Raven-Labels.")
     parser.add_argument("--config", type=str, required=True, help="Pfad zu configs/features.yaml")
-    parser.add_argument("--no-labels", action="store_true", help="Keine Raven-Labels laden; nur X (Embeddings) erzeugen.")
-    parser.add_argument("--basenames", nargs="*", default=None, help="Optionale Liste von Basenames, die verarbeitet werden sollen.")
+    parser.add_argument("--no-labels", action="store_true",
+                        help="Keine Raven-Labels laden; nur X (Embeddings) erzeugen.")
+    parser.add_argument("--basenames", nargs="*", default=None,
+                        help="Optionale Liste von Basenames, die verarbeitet werden sollen.")
     args = parser.parse_args()
 
     logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(message)s")
